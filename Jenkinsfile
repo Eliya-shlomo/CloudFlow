@@ -1,7 +1,6 @@
 pipeline {
     agent any 
 
-
     environment {
         AWS_REGION = "us-east-1"
         ECR_REGISTRY = "261303806788.dkr.ecr.us-east-1.amazonaws.com"
@@ -34,16 +33,17 @@ pipeline {
                     sh '''
                         aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
                         aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-                        aws configure set default.region $AWS_REGION 
+                        aws configure set default.region $AWS_REGION
                         aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-
                     '''
+                }
             }
         }
 
         stage('Push Docker Image to ECR') {
             steps {
-                sh 'docker push $ECR_REGISTRY/$ECR_REPOSITORY:DOCKER_IMAGE_TAG'
+                sh 'docker tag $ECR_REPOSITORY:$DOCKER_IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$DOCKER_IMAGE_TAG'
+                sh 'docker push $ECR_REGISTRY/$ECR_REPOSITORY:$DOCKER_IMAGE_TAG'
             }
         }
     }
