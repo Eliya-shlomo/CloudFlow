@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = "eliya-cloudflow:latest"
+    }
+
     stages {
         stage('Clone Repo') {
             steps {
@@ -14,15 +18,16 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
+        stage('Build Docker Image'){
             steps {
-                sh 'echo "No tests yet, skipping..."'
+                sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
 
-        stage('Run App') {
+        stage('Run Docker Container') {
             steps {
-                sh 'nohup python app.py &'
+                sh 'docker rm -f cloudflow-app || true'
+                sh 'docker run -d -p 5000:5000 --name cloudflow-app $DOCKER_IMAGE'
             }
         }
     }
