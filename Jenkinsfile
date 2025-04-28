@@ -1,12 +1,16 @@
 pipeline {
-    agent any
+    agent any 
+
 
     environment {
-        DOCKER_IMAGE = "eliya-cloudflow:latest"
+        AWS_REGION = "us-east-1"
+        ECR_REGISTRY = "261303806788.dkr.ecr.us-east-1.amazonaws.com"
+        ECR_REPOSITORY = "cloudflow"
+        DOCKER_IMAGE_TAG = "latest"
     }
 
     stages {
-        stage('Clone Repo') {
+        stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/Eliya-shlomo/CloudFlow.git'
             }
@@ -18,16 +22,21 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image'){
+        stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
+                sh 'docker build -t $ECR_REPOSITORY:$DOCKER_IMAGE_TAG'
             }
         }
 
-        stage('Run Docker Container') {
+        stage('Login to AWS ECR') {
             steps {
-                sh 'docker rm -f cloudflow-app || true'
-                sh 'docker run -d -p 5000:5000 --name cloudflow-app $DOCKER_IMAGE'
+                sh 'aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY'
+            }
+        }
+
+        stage('Push Docker Image to ECR') {
+            steps {
+                sh 'docker push $ECR_REGISTRY/$ECR_REPOSITORY:DOCKER_IMAGE_TAG'
             }
         }
     }
