@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Clone Repo') {
             steps {
-                git 'https://github.com/Eliya-Shlomo/CloudFlow.git'
+                git 'https://github.com/Eliya-shlomo/CloudFlow.git'
             }
         }
 
