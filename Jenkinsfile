@@ -4,7 +4,7 @@ pipeline {
     environment {
         AWS_REGION        = "us-east-1"
         ECR_REGISTRY      = "261303806788.dkr.ecr.us-east-1.amazonaws.com"
-        ECR_REPOSITORY    = "cloudflow"
+        ECR_REPOSITORY    = "myprojectsrepos/cloudflow"
         DOCKER_IMAGE_TAG  = "latest"
         KUBE_DEPLOY_PATH  = "k8s"
         KUBECONFIG        = "$HOME/.kube/config"
