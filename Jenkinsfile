@@ -48,7 +48,6 @@ pipeline {
                 sh 'docker push $ECR_REGISTRY/$ECR_REPOSITORY:$DOCKER_IMAGE_TAG'
             }
         }
-
         stage('Setup kubeconfig') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'f42c76a0-5a4a-415b-971e-23aa91af0f6d', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
@@ -60,6 +59,7 @@ pipeline {
                     '''
                 }
             }
+        }
 
 
 
