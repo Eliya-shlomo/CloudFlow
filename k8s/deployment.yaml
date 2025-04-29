@@ -1,21 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cloudflow-deployment
+  name: cloudflow-deployment-__ENV__
   labels:
-    app: cloudflow 
+    app: cloudflow
+    env: __ENV__
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: cloudflow
+      env: __ENV__
   template:
     metadata: 
       labels:
         app: cloudflow
+        env: __ENV__
     spec:
       containers:
-        - name:  cloudflow 
-          image: 261303806788.dkr.ecr.us-east-1.amazonaws.com/myprojectsrepos/cloudflow:latest
+        - name: cloudflow
+          image: 261303806788.dkr.ecr.us-east-1.amazonaws.com/myprojectsrepos/cloudflow:${BRANCH_NAME}
           ports:
             - containerPort: 5000

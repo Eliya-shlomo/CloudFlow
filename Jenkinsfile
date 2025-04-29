@@ -87,14 +87,14 @@ pipeline {
                 }
             }
             steps {
-                script{ 
-                    def envName = (env.BRANCH_NAME== 'main') ? 'production' : 'staging'    
-                    sh '''
-                        echo "📦 Deploying to EKS..."
-                        kubectl apply -f $KUBE_DEPLOY_PATH/deployment.yaml
+                script { 
+                    def envName = (env.BRANCH_NAME == 'main') ? 'production' : 'staging'
+                    sh """
+                        echo "📦 Deploying to EKS as ${envName}..."
+                        sed "s/__ENV__/${envName}/g" $KUBE_DEPLOY_PATH/deployment.yaml | kubectl apply -f -
                         kubectl apply -f $KUBE_DEPLOY_PATH/service.yaml
-                        echo "✅ Deployed!"
-                    '''
+                        echo "✅ Deployed to ${envName}!"
+                    """
                 }
             }
         }
