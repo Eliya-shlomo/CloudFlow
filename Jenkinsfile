@@ -49,6 +49,20 @@ pipeline {
             }
         }
 
+        stage('Setup kubeconfig') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'f42c76a0-5a4a-415b-971e-23aa91af0f6d', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh '''
+                        aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                        aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                        aws configure set default.region us-east-1
+                        aws eks update-kubeconfig --region us-east-1 --name cloudflow-cluster
+                    '''
+                }
+            }
+
+
+
         stage('Deploy to EKS') {
             steps {
                 sh '''
