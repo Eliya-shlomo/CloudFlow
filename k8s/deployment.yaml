@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
         - name:  cloudflow 
-          image: 261303806788.dkr.ecr.us-east-1.amazonaws.com/cloudflow:latest
+          image: 261303806788.dkr.ecr.us-east-1.amazonaws.com/myprojectsrepos/cloudflow:latest
           ports:
             - containerPort: 5000
