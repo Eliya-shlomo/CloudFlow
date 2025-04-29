@@ -6,6 +6,8 @@ pipeline {
         ECR_REGISTRY = "261303806788.dkr.ecr.us-east-1.amazonaws.com"
         ECR_REPOSITORY = "myprojectsrepos/cloudflow"
         DOCKER_IMAGE_TAG = "latest"
+        KUBEֹֹֹ_DEPLOY_PATH = "k8s"
+        KUBECONFIG = "$HOME/.kube/config"
     }
 
     stages {
@@ -44,6 +46,17 @@ pipeline {
             steps {
                 sh 'docker tag $ECR_REPOSITORY:$DOCKER_IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$DOCKER_IMAGE_TAG'
                 sh 'docker push $ECR_REGISTRY/$ECR_REPOSITORY:$DOCKER_IMAGE_TAG'
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                sh '''
+                    echo "Deploying to EKS..."
+                    kubectl apply -f $KUBE_DEPLOY_PATH/deployment.yaml
+                    kubectl apply -f $KUBE_DEPLOY_PATH/service.yaml
+                    echo "Deployed!"
+                '''
             }
         }
     }
