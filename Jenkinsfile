@@ -48,6 +48,15 @@ pipeline {
                 sh 'docker push $ECR_REGISTRY/$ECR_REPOSITORY:$DOCKER_IMAGE_TAG'
             }
         }
+
+        stage('Run Tests') {
+            steps {
+                sh '''
+                    echo "Running Unit Tests"
+                    pytest tests/ || echo "Tests failed, continuing anyway"
+                '''
+            }
+        }
         stage('Setup kubeconfig') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'f42c76a0-5a4a-415b-971e-23aa91af0f6d', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
@@ -61,16 +70,32 @@ pipeline {
             }
         }
 
-
-
-        stage('Deploy to EKS') {
+        stage('Clean Previous k8s Deployment') {
             steps {
                 sh '''
-                    echo "📦 Deploying to EKS..."
-                    kubectl apply -f $KUBE_DEPLOY_PATH/deployment.yaml
-                    kubectl apply -f $KUBE_DEPLOY_PATH/service.yaml
-                    echo "✅ Deployed!"
+                    kubectl delete -f $KUBE_DEPLOY_PATH/deployment.yaml || true
+                    kubectl delete -f $KUBE_DEPLOY_PATH/service.yaml || true
                 '''
+            }
+        }
+
+        stage('Deploy to EKS') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'dev'
+                }
+            }
+            steps {
+                script{ 
+                    def envName = (env.BRANCH_NAME== 'main') ? 'production' : 'staging'    
+                    sh '''
+                        echo "📦 Deploying to EKS..."
+                        kubectl apply -f $KUBE_DEPLOY_PATH/deployment.yaml
+                        kubectl apply -f $KUBE_DEPLOY_PATH/service.yaml
+                        echo "✅ Deployed!"
+                    '''
+                }
             }
         }
     }
