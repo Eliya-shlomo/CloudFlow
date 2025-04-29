@@ -1,13 +1,13 @@
 pipeline {
-    agent any 
+    agent any
 
     environment {
-        AWS_REGION = "us-east-1"
-        ECR_REGISTRY = "261303806788.dkr.ecr.us-east-1.amazonaws.com"
-        ECR_REPOSITORY = "myprojectsrepos/cloudflow"
-        DOCKER_IMAGE_TAG = "latest"
-        KUBEֹֹֹ_DEPLOY_PATH = "k8s"
-        KUBECONFIG = "$HOME/.kube/config"
+        AWS_REGION        = "us-east-1"
+        ECR_REGISTRY      = "261303806788.dkr.ecr.us-east-1.amazonaws.com"
+        ECR_REPOSITORY    = "cloudflow"
+        DOCKER_IMAGE_TAG  = "latest"
+        KUBE_DEPLOY_PATH  = "k8s"
+        KUBECONFIG        = "$HOME/.kube/config"
     }
 
     stages {
@@ -52,10 +52,10 @@ pipeline {
         stage('Deploy to EKS') {
             steps {
                 sh '''
-                    echo "Deploying to EKS..."
+                    echo "📦 Deploying to EKS..."
                     kubectl apply -f $KUBE_DEPLOY_PATH/deployment.yaml
                     kubectl apply -f $KUBE_DEPLOY_PATH/service.yaml
-                    echo "Deployed!"
+                    echo "✅ Deployed!"
                 '''
             }
         }
