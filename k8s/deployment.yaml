@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflow-deployment
+  labels:
+    app: cloudflow 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflow
+  template:
+    metadata: 
+      labels:
+        app: cloudflow
+    spec:
+      containers:
+        - name:  cloudflow 
+          image: 261303806788.dkr.ecr.us-east-1.amazonaws.com/cloudflow:latest
+          ports:
+            - containerPort: 5000
