@@ -1,0 +1,122 @@
+# 🌩️ CloudFlow
+
+CloudFlow is a robust cloud-native CI/CD pipeline built with **Jenkins**, **Docker**, **Kubernetes**, and **AWS**.  
+It automates the process from **code to deployment** in a scalable, production-ready environment.
+
+---
+
+## 🚀 Project Overview
+
+CloudFlow provides a complete end-to-end pipeline that:
+- Builds Docker images from source code
+- Pushes images to AWS Elastic Container Registry (ECR)
+- Deploys to an AWS EKS cluster using Kubernetes
+- Differentiates staging and production environments using branch-based logic
+- Secures services using **Let's Encrypt** and `cert-manager`
+
+---
+
+## 🧱 Tech Stack
+
+| Component      | Tool/Service                              |
+|----------------|--------------------------------------------|
+| CI/CD          | Jenkins (Multibranch Pipeline)             |
+| Containerization | Docker                                   |
+| Cloud Provider | AWS (ECR, EKS, IAM)                        |
+| Orchestration  | Kubernetes                                 |
+| Ingress & TLS  | NGINX Ingress Controller + cert-manager   |
+| Registry       | AWS ECR                                    |
+| Infrastructure as Code | Terraform (coming soon)            |
+
+---
+
+## 🔁 Pipeline Flow
+
+1. **Code pushed to GitHub**
+2. **Jenkins (Multibranch Pipeline)** detects branch and clones repo
+3. **Docker image** is built and tagged with branch name
+4. Image is **pushed to ECR**
+5. **Kubernetes manifests** (`deployment.yaml`, `service.yaml`, `ingress.yaml`) are applied to EKS
+6. Environment-specific configs (e.g., `__ENV__`) are dynamically replaced
+7. TLS certificates issued automatically via Let's Encrypt
+
+---
+
+## 🧪 Example Jenkinsfile Highlights
+
+```groovy
+stage('Deploy to EKS') {
+    when {
+        anyOf {
+            branch 'main'
+            branch 'dev'
+        }
+    }
+    steps {
+        script {
+            def envName = (env.BRANCH_NAME == 'main') ? 'production' : 'staging'
+            sh """
+                sed "s/__ENV__/${envName}/g" k8s/deployment.yaml | kubectl apply -f -
+                kubectl apply -f k8s/service.yaml
+            """
+        }
+    }
+}
+```
+
+## 📁 Project Structure
+
+```groovy
+.
+├── Jenkinsfile
+├── app/                 # Flask application
+├── k8s/
+│   ├── deployment.yaml  # K8s Deployment (templated)
+│   ├── service.yaml     # K8s Service
+│   ├── ingress.yaml     # TLS + Ingress configuration
+├── requirements.txt     # Python dependencies
+└── README.md
+
+```
+
+## 🔐 Secrets Handling
+
+```groovy
+Sensitive information like:
+
+AWS credentials
+
+cert-manager email
+
+kubeconfig
+
+...is handled via Jenkins credentials and envsubst. Email addresses and keys are never stored in the repo.
+```
+
+## 📦 Build & Deployment Commands (Local Example)
+
+```groovy
+
+# Build Docker Image
+docker build -t myprojectsrepos/cloudflow:latest .
+
+# Push to ECR (after aws ecr login)
+docker tag myprojectsrepos/cloudflow:latest 261303806788.dkr.ecr.us-east-1.amazonaws.com/myprojectsrepos/cloudflow:latest
+docker push 261303806788.dkr.ecr.us-east-1.amazonaws.com/myprojectsrepos/cloudflow:latest
+
+# Deploy to K8s
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/ingress.yaml
+
+
+
+```
+
+## 🧠 Author
+```groovy
+Eliya Shlomo
+Cloud DevOps Enthusiast | Kubernetes • Jenkins • AWS
+
+Feel free to connect or contribute!
+```
