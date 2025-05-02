@@ -5,7 +5,7 @@ pipeline {
         AWS_REGION        = "us-east-1"
         ECR_REGISTRY      = "261303806788.dkr.ecr.us-east-1.amazonaws.com"
         ECR_REPOSITORY    = "myprojectsrepos/cloudflow"
-        DOCKER_IMAGE_TAG  = "latest"
+        DOCKER_IMAGE_TAG  = "${env.BRANCH_NAME}"
         KUBE_DEPLOY_PATH  = "k8s"
         KUBECONFIG        = "$HOME/.kube/config"
     }
@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/Eliya-shlomo/CloudFlow.git'
+                checkout scm
             }
         }
 
@@ -44,8 +44,10 @@ pipeline {
 
         stage('Push Docker Image to ECR') {
             steps {
-                sh 'docker tag $ECR_REPOSITORY:$DOCKER_IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$DOCKER_IMAGE_TAG'
-                sh 'docker push $ECR_REGISTRY/$ECR_REPOSITORY:$DOCKER_IMAGE_TAG'
+                sh '''
+                    docker tag $ECR_REPOSITORY:$DOCKER_IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$DOCKER_IMAGE_TAG
+                    docker push $ECR_REGISTRY/$ECR_REPOSITORY:$DOCKER_IMAGE_TAG
+                '''
             }
         }
 
@@ -57,14 +59,15 @@ pipeline {
                 '''
             }
         }
+
         stage('Setup kubeconfig') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'f42c76a0-5a4a-415b-971e-23aa91af0f6d', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh '''
                         aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
                         aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-                        aws configure set default.region us-east-1
-                        aws eks update-kubeconfig --region us-east-1 --name cloudflow-cluster
+                        aws configure set default.region $AWS_REGION
+                        aws eks update-kubeconfig --region $AWS_REGION --name cloudflow-cluster
                     '''
                 }
             }
@@ -83,16 +86,18 @@ pipeline {
             when {
                 anyOf {
                     branch 'main'
-                    branch 'dev'
+                    branch 'production'
                 }
             }
             steps {
-                script { 
-                    def envName = (env.BRANCH_NAME == 'main') ? 'production' : 'staging'
+                script {
+                    def envName = (env.BRANCH_NAME == 'production') ? 'production' : 'staging'
+                    def domain = (env.BRANCH_NAME == 'production') ? 'cloudflow.me' : 'staging.cloudflow.me'
                     sh """
-                        echo "📦 Deploying to EKS as ${envName}..."
+                        echo "📦 Deploying to EKS as ${envName} with domain ${domain}..."
                         sed "s/__ENV__/${envName}/g" $KUBE_DEPLOY_PATH/deployment.yaml | kubectl apply -f -
                         kubectl apply -f $KUBE_DEPLOY_PATH/service.yaml
+                        kubectl apply -f $KUBE_DEPLOY_PATH/ingress.yaml || true
                         echo "✅ Deployed to ${envName}!"
                     """
                 }
